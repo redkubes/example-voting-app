@@ -6,7 +6,7 @@ This repo contains the source code to build the `vote`, `worker` and `results` i
 
 ## Building the images
 
-Use the Build feature in Otomi to build the images.
+Use the Build feature in Otomi to build the images with `mode-Docker`. Set the `path` to `./vote/Dockerfile` (or `./worker/Dockerfile` or `./result/Dockerfile`).
 
 ## Create a Redis cluster and a PostgreSQL database
 
@@ -82,6 +82,42 @@ env:
     value: <psql-cluster-name>-rw
 ```
 
-## Expose the services
+## Register the services
 
-Expose the `vote` and `result` services.
+Register the `vote` and `result` services in Otomi and configure them for external exposure. If `Network policies` are enabled, then register all services and configure the network policies:
+
+### Postgres database
+
+- Register the `<workload-name>-rw` Postgresql service
+- Set exposure to `Private` (default)
+- In `Network policies` add the Pod Selector `<postgres-workload-name>`
+- Select `Allow selected`
+- Add From team name `<team-name>` and From label value `<postgres-workload-name>`
+- Add From team name `<team-name>` and From label value `<worker>`
+- Add From team name `<team-name>` and From label value `<result>`
+
+### Redis
+
+- Register the `<workload-name>-master` Redis service 
+- Set exposure to `Private` (default)
+- In `Network policies` add the Pod Selector `<redis-workload-name>`
+- Select `Allow selected`
+- Add From team name `<team-name>` and From label value `<redis-workload-name>`
+- Add From team name `<team-name>` and From label value `<worker>`
+- Add From team name `<team-name>` and From label value `<vote>`
+
+### Vote
+
+- Register the `vote` service 
+- Set exposure to `External`
+
+### Worker
+
+- Register the `<worker` service 
+- Set exposure to `Private` (default)
+
+### Result
+
+- Register the `<result>` service 
+- Set exposure to `External`
+
