@@ -1,22 +1,25 @@
-# because of dotnet, we always build on amd64, and target platforms in cli
-# dotnet doesn't support QEMU for building or running. 
-# (errors common in arm/v7 32bit) https://github.com/dotnet/dotnet-docker/issues/1537
-# https://hub.docker.com/_/microsoft-dotnet
-# hadolint ignore=DL3029
-# to build for a different platform than your host, use --platform=<platform>
-# for example, if you were on Intel (amd64) and wanted to build for ARM, you would use:
-# docker buildx build --platform "linux/arm64/v8" .
-FROM --platform=amd64 mcr.microsoft.com/dotnet/sdk:7.0 as build
+FROM node:18-slim
 
-WORKDIR /source
-COPY *.csproj .
-RUN dotnet restore -a amd64
+# add curl for healthcheck
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl tini && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /usr/local/app
+
+# have nodemon available for local dev use (file watching)
+RUN npm install -g nodemon
+
+COPY package*.json ./
+
+RUN npm ci && \
+ npm cache clean --force && \
+ mv /usr/local/app/node_modules /node_modules
 
 COPY . .
-RUN dotnet publish -c release -o /app -a amd64 --self-contained false --no-restore
 
-# app image
-FROM mcr.microsoft.com/dotnet/runtime:7.0
-WORKDIR /app
-COPY --from=build /app .
-ENTRYPOINT ["dotnet", "Worker.dll"]
+ENV PORT 80
+EXPOSE 80
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["node", "server.js"]
