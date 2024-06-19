@@ -2,6 +2,8 @@
 
 This repo contains the source code to build the `vote`, `worker` and `results` images for deploying the Docker samples [example-voting-app] in Otomi using the provided Helm charts in the Otomi Catalog.
 
+<img title="Voting App" alt="App diagram" src="Voting App.jpg">
+
 # Get started
 
 ## Building the images
@@ -84,40 +86,35 @@ env:
 
 ## Register the services
 
-Register the `vote` and `result` services in Otomi and configure them for external exposure. If `Network policies` are enabled, then register all services and configure the network policies:
-
-### Postgres database
-
-- Register the `<workload-name>-rw` Postgresql service
-- Set exposure to `Private` (default)
-- In `Network policies` add the Pod Selector `<postgres-workload-name>`
-- Select `Allow selected`
-- Add From team name `<team-name>` and From label value `<postgres-workload-name>`
-- Add From team name `<team-name>` and From label value `<worker>`
-- Add From team name `<team-name>` and From label value `<result>`
-
-### Redis
-
-- Register the `<workload-name>-master` Redis service 
-- Set exposure to `Private` (default)
-- In `Network policies` add the Pod Selector `<redis-workload-name>`
-- Select `Allow selected`
-- Add From team name `<team-name>` and From label value `<redis-workload-name>`
-- Add From team name `<team-name>` and From label value `<worker>`
-- Add From team name `<team-name>` and From label value `<vote>`
+Register the `vote` and `result` services in Otomi and configure them for external exposure. 
 
 ### Vote
 
 - Register the `vote` service 
 - Set exposure to `External`
 
-### Worker
-
-- Register the `<worker` service 
-- Set exposure to `Private` (default)
 
 ### Result
 
 - Register the `<result>` service 
 - Set exposure to `External`
 
+## Network Policies
+
+If `Network policies` are enabled, then register all services and configure the network policies:
+
+### Postgres Database
+- Create a new Netpol and select the ingress rule type.
+- Add the selector label name `otomi.io/app`.
+- Add the selector label value `<postgres-workload-name>`.
+- Select AllowOnly.
+- Add the namespace `<team-name>`, the selector label name `otomi.io/app` and the selector label value `<worker>`.
+- Add the namespace `<team-name>`, the selector label name `otomi.io/app` and the selector label value `<result>`.
+
+### Redis
+- Create a new Netpol and select the ingress rule type.
+- Add the selector label name `otomi.io/app`.
+- Add the selector label value `<redis-workload-name>`.
+- Select AllowOnly.
+- Add the namespace `<team-name>`, the selector label name `otomi.io/app` and the selector label value `<worker>`.
+- Add the namespace `<team-name>`, the selector label name `otomi.io/app` and the selector label value `<vote>`.
